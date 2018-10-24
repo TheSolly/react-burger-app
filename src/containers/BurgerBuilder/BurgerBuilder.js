@@ -8,63 +8,16 @@ import OrderSummary from "../../components/Burger/OrderSummary/OrderSummary";
 import axios from "../../axios-orders";
 import Spinner from "../../components/UI/Spinner/Spinner";
 import withErrorHandler from "../../hoc/WithErrorHandler/WithErrorHandler";
-import * as actionTypes from "../../store/actions";
+import * as actions from "../../store/actions/index";
 
 class BurgerBuilder extends Component {
   state = {
-    purchasing: false,
-    loading: false,
-    error: false,
-    errorMessage: null
+    purchasing: false
   };
 
-  componentDidMount() {
-    // axios
-    //   .get("https://react-my-burger-b1301.firebaseio.com/ingredients.json")
-    //   .then(res => {
-    //     this.setState({ ingredients: res.data });
-    //   })
-    //   .catch(err => {
-    //     this.setState({ error: true, errorMessage: err.message });
-    //   });
+  componentWillMount() {
+    this.props.onInitIngredient();
   }
-
-  // addIngredientHandler = type => {
-  //   const oldCount = this.state.ingredients[type];
-  //   const updatedCount = oldCount + 1;
-  //   const updatedIngredients = {
-  //     ...this.state.ingredients
-  //   };
-  //   updatedIngredients[type] = updatedCount;
-  //   const priceAddition = INGREDIENT_PRICES[type];
-  //   const oldPrice = this.state.totalPrice;
-  //   const newPrice = oldPrice + priceAddition;
-  //   this.setState({
-  //     totalPrice: newPrice,
-  //     ingredients: updatedIngredients
-  //   });
-  //   this.updatePurchaseState(updatedIngredients);
-  // };
-
-  // removeIngredientHandler = type => {
-  //   const oldCount = this.state.ingredients[type];
-  //   if (oldCount <= 0) {
-  //     return;
-  //   }
-  //   const updatedCount = oldCount - 1;
-  //   const updatedIngredients = {
-  //     ...this.state.ingredients
-  //   };
-  //   updatedIngredients[type] = updatedCount;
-  //   const priceDeduction = INGREDIENT_PRICES[type];
-  //   const oldPrice = this.state.totalPrice;
-  //   const newPrice = oldPrice - priceDeduction;
-  //   this.setState({
-  //     totalPrice: newPrice,
-  //     ingredients: updatedIngredients
-  //   });
-  //   this.updatePurchaseState(updatedIngredients);
-  // };
 
   updatePurchaseState(ingredients) {
     const sum = Object.keys(ingredients)
@@ -86,16 +39,7 @@ class BurgerBuilder extends Component {
   };
 
   purchaseContinueHandler = () => {
-    // const queryParams = [];
-    // for (let i in this.state.ingredients) {
-    //   queryParams.push(
-    //     encodeURIComponent(i) +
-    //       "=" +
-    //       encodeURIComponent(this.state.ingredients[i])
-    //   );
-    // }
-    // queryParams.push("price=" + this.state.totalPrice);
-    // const queryString = queryParams.join("&");
+    this.props.onPurchaseInit();
     this.props.history.push("/checkout");
   };
 
@@ -108,8 +52,8 @@ class BurgerBuilder extends Component {
     }
     // {salad: true, meat:false, ...}
     let orderSummary = null;
-    let burger = this.state.error ? (
-      <p>Error Message : {this.state.errorMessage}, App can't load!</p>
+    let burger = this.props.error ? (
+      <p>Error Message: App can't load!</p>
     ) : (
       <Spinner />
     );
@@ -137,9 +81,6 @@ class BurgerBuilder extends Component {
         />
       );
     }
-    if (this.state.loading) {
-      orderSummary = <Spinner />;
-    }
 
     return (
       <Fragment>
@@ -157,17 +98,20 @@ class BurgerBuilder extends Component {
 
 const mapStateToProps = store => {
   return {
-    ings: store.ingredients,
-    price: store.totalPrice
+    ings: store.burger.ingredients,
+    price: store.burger.totalPrice,
+    error: store.burger.error
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    onIngredientAdded: ingName =>
-      dispatch({ type: actionTypes.ADD_INGREDIENT, ingredientName: ingName }),
-    onIngredientRemoved: ingName =>
-      dispatch({ type: actionTypes.REMOVE_INGREDIENT, ingredientName: ingName })
+    onInitIngredient: () => {
+      dispatch(actions.initIngredient());
+    },
+    onIngredientAdded: ingName => dispatch(actions.addIngredient(ingName)),
+    onIngredientRemoved: ingName => dispatch(actions.removeIngredient(ingName)),
+    onPurchaseInit: () => dispatch(actions.purchaseInit())
   };
 };
 
